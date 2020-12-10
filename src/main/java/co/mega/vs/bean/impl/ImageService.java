@@ -31,6 +31,7 @@ public class ImageService implements IImageService {
 
         Map<String, Object> r = new HashMap<>();
         r.put("fileSize", imageData.length);
+        r.put("success", true);
         return r;
     }
 }
