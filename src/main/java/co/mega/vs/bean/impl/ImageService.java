@@ -77,8 +77,7 @@ public class ImageService implements IImageService {
     }
 
     private File findFile() {
-//        File file = new File(PATH);
-        File file = new File("/Users/h0153/Desktop/4567/");
+        File file = new File(PATH);
         File[] vidFiles = file.listFiles(); // 该文件目录下全部vidFile
 
         if (vidFiles != null && vidFiles.length > 0) {
