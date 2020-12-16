@@ -31,8 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service("imageService")
 public class ImageService implements IImageService {
 
-//    private static final String PATH = "/Users/h0153/Desktop/";
-
     private static Logger logger = LoggerFactory.getLogger(ImageService.class);
 
     @Autowired
