@@ -19,14 +19,13 @@ public class Constants {
     public static final String CONFIG_DEFAULT_MAX_PER_ROUTE = "defaultMaxPerRoute";
     public static final String CONFIG_CONNECT_TIMEOUT = "connectTimeout"; // 建立连接的超时
     public static final String CONFIG_SOCKET_TIMEOUT = "socketTimeout"; // 读取数据的超时
-    public static final String CONFIG_SOCKET_TIMEOUT_FOR_QA = "socketTimeoutForQa";
     public static final String CONFIG_CONNECTION_REQUEST_TIMEOUT = "connectionRequestTimeout"; // 从连接池中获取连接的超时
 
-    public static final String CONFIG_OPENED_INTERFACE = "openedInterface";
-
     public static final String APP_ID = "appId";
+
     public static final String APP_SECRET = "appSecret";
 
-
+    public static final String IMAGE_STOR_PATH = "imageStorPath";
+    public static final String IMAGE_DELETE_PATH = "imageDelePath";
 
 }

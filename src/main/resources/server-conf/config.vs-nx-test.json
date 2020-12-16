@@ -1,4 +1,5 @@
 {
   "tspUrl":"https://xtsp-test.i-tetris.com",
-  "appSecret":"eeTmvVIPLifhhcEyt3oqbiO7uYIzze2b"
+  "appSecret":"eeTmvVIPLifhhcEyt3oqbiO7uYIzze2b",
+  "imagePath" :  ""
 }

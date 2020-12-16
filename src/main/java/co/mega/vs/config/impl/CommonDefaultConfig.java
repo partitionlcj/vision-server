@@ -23,11 +23,10 @@ public class CommonDefaultConfig implements IDefaultConfig {
                 put(Constants.CONFIG_MAX_TOTAL, 500);
                 put(Constants.CONFIG_DEFAULT_MAX_PER_ROUTE, 50);
                 put(Constants.CONFIG_CONNECT_TIMEOUT, 500);
-                put(Constants.CONFIG_SOCKET_TIMEOUT, 1300);
                 put(Constants.CONFIG_CONNECTION_REQUEST_TIMEOUT, 500);
+                put(Constants.CONFIG_SOCKET_TIMEOUT, 1300);
 
                 put(Constants.APP_ID, "100030000");
-
             }
         };
     }

@@ -289,13 +289,6 @@ public class HttpToolImpl implements IHttpTool {
                 headers.entrySet().forEach(e -> request.addHeader(e.getKey(), e.getValue()));
             }
 
-            if (QueryUrl.QueryType.CHAT_SERVER.equals(queryUrl.type) || QueryUrl.QueryType.QA_SERVER.equals(queryUrl.type) || QueryUrl.QueryType.SOUGO_NLU.equals(queryUrl.type) || QueryUrl.QueryType.IFLY_NLU.equals(queryUrl.type)) {
-                RequestConfig config = RequestConfig.custom()
-                        .setConnectTimeout(configService.getConfig().get(Constants.CONFIG_CONNECT_TIMEOUT, Integer.class))
-                        .setSocketTimeout(configService.getConfig().get(Constants.CONFIG_SOCKET_TIMEOUT_FOR_QA, Integer.class))
-                        .setConnectionRequestTimeout(configService.getConfig().get(Constants.CONFIG_CONNECTION_REQUEST_TIMEOUT, Integer.class)).build();
-                ((HttpRequestBase) request).setConfig(config);
-            }
             response = httpClient.execute(request);
 
             statusCode = response.getStatusLine().getStatusCode();
@@ -306,7 +299,7 @@ public class HttpToolImpl implements IHttpTool {
 
             if (statusCode == HttpStatus.SC_OK) {
                 // we don't monitor url of OTHER type
-                if (QueryUrl.QueryType.OTHER.equals(queryUrl.type) || QueryUrl.QueryType.SOUGO_NLU.equals(queryUrl.type) || QueryUrl.QueryType.IFLY_NLU.equals(queryUrl.type)) {
+                if (QueryUrl.QueryType.OTHER.equals(queryUrl.type)) {
                     querySuccess = true;
                 } else {
                     JsonElement element = jsonParser.parse(responseJson);
@@ -316,33 +309,6 @@ public class HttpToolImpl implements IHttpTool {
                         querySuccess = true;
                     }
 
-                    // deal with special case
-                    if (!querySuccess) {
-                        switch (queryUrl.type) {
-                            case ACCOUNT_SERVICE:
-                                if ("auth_failed".equals(resultCodeStr)) {
-                                    querySuccess = true;
-                                }
-                                break;
-                            case VEHICLE_API:
-                            case DRIVER_PROFILE:
-                                if ("resource_not_found".equals(resultCodeStr)) {
-                                    querySuccess = true;
-                                }
-                                break;
-                            case NAVI_STATUS_SYNC:
-                                if ("null_response".equals(resultCodeStr)) {
-                                    querySuccess = true;
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                }
-
-                if (!QueryUrl.QueryType.MODEL_SERVER.equals(queryUrl.type) && !QueryUrl.QueryType.MR_MODEL_SERVER.equals(queryUrl.type)) {
-                    logger.info("jsonReturned: " + responseJson);
                 }
             }
         } catch (ConnectException e) {
@@ -357,19 +323,6 @@ public class HttpToolImpl implements IHttpTool {
             // for monitoring outside service
             if (response == null || !querySuccess) {
                 logger.error("outside service failure, query url: {}, status code: {}, response message: {}", queryUrl.url, statusCode, responseJson);
-                switch (queryUrl.type) {
-                    case XIMA_MEDIA_SEARCH:
-                    case ACCOUNT_SERVICE:
-                    case VEHICLE_API:
-                    case CONTACT_SERVICE:
-                    case MEDIA_STATUS_SYNC:
-                    case NAVI_API:
-                    case NAVI_STATUS_SYNC:
-                    case WEATHER_SERVER:
-                    case DRIVER_PROFILE:
-                    case PERMISSION_SERVICE:
-                        break;
-                }
             }
 
             if (response != null) {

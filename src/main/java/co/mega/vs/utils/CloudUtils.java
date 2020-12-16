@@ -5,13 +5,12 @@ import org.apache.http.NameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import static software.amazon.ion.system.IonTextWriterBuilder.UTF8;
 
 
 public class CloudUtils {
@@ -84,7 +83,7 @@ public class CloudUtils {
 
     public static String md5(String input) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("MD5");
-        md.update(input.getBytes(UTF8));
+        md.update(input.getBytes(StandardCharsets.UTF_8));
         byte byteData[] = md.digest();
         StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < byteData.length; i++) {

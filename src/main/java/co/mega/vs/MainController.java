@@ -127,7 +127,7 @@ public class MainController {
 
 
     @GetMapping(value = "/vs/img/download")
-    public ResponseEntity imageStrategy(HttpServletRequest request, @RequestParam(value = "req_id", required = false) String requestId) {
+    public ResponseEntity downloadImage(HttpServletRequest request, @RequestParam(value = "req_id", required = false) String requestId) {
         if (StringUtils.isBlank(requestId)) {
             requestId = UUID.randomUUID().toString();
         }
