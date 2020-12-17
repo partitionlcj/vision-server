@@ -44,8 +44,6 @@ public class ImageService implements IImageService {
 
     private Gson gson = new Gson();
 
-    private Map<String, Object> lockMap = new ConcurrentHashMap<>();
-
     private LinkedBlockingQueue<ImageStatus> imgStatusQueue = new LinkedBlockingQueue<>();
 
     private String imageDelePath;
@@ -138,7 +136,9 @@ public class ImageService implements IImageService {
 
         Map<String, Object> r = new HashMap<>();
 
-        for (ImageStatus imageStatus : imgStatusQueue) {
+        Iterator<ImageStatus> iterator = imgStatusQueue.iterator();
+        while (iterator.hasNext()) {
+            ImageStatus imageStatus = iterator.next();
             if (imageStatus.getStatus().get() == 0 && imageStatus.getLock().tryLock()) {
                 if (imageStatus.getStatus().get() == 0) {
                     if (StringUtils.isNotBlank(imageStatus.getFileName())) {
