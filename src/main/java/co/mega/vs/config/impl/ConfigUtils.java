@@ -43,7 +43,7 @@ public class ConfigUtils {
                 Map<String, Object> defaultConfigMap = collectDefaultConfigValues(defaultConfigClasses);
                 configMap.putAll(defaultConfigMap);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.warn("Sign error : {}", e);
                 // Do nothing if no default values
             }
 
@@ -51,7 +51,7 @@ public class ConfigUtils {
             Config config = new Config(configMap);
             return config;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.warn("Sign error : {}", e);
             throw new RuntimeException(e);
         }
     }

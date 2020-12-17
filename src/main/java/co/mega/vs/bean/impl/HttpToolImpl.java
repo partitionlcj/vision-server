@@ -13,7 +13,10 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.HttpClientUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.ConnectTimeoutException;
@@ -30,7 +33,6 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -97,7 +99,7 @@ public class HttpToolImpl implements IHttpTool {
         if (needSign) {
             try {
                 URIBuilder uriBuilder = new URIBuilder(queryUrl.originalUrl);
-                uriBuilder.addParameter("app_id", configService.getConfig().get(Constants.APP_ID, String.class));
+                uriBuilder.addParameter("app_id", "100030000");
                 uriBuilder.addParameter("timestamp", String.valueOf(System.currentTimeMillis() / 1000));
 
                 List<NameValuePair> p = new ArrayList<>();
@@ -146,7 +148,7 @@ public class HttpToolImpl implements IHttpTool {
             try {
                 URIBuilder uriBuilder = new URIBuilder(queryUrl.originalUrl);
                 uriBuilder.addParameter("nonce", String.valueOf(UUID.randomUUID().getMostSignificantBits()));
-                uriBuilder.addParameter("app_id", configService.getConfig().get(Constants.APP_ID, String.class));
+                uriBuilder.addParameter("app_id", "100030000");
                 uriBuilder.addParameter("timestamp", String.valueOf(System.currentTimeMillis() / 1000));
 
                 sign = CloudUtils.signURLAndRequestParams("GET", uriBuilder.getPath(), uriBuilder.getQueryParams(),
@@ -158,7 +160,8 @@ public class HttpToolImpl implements IHttpTool {
                 logger.warn("URI error : {}", e);
                 return null;
             }  catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
+                logger.warn("Sign error : {}", e);
+                return null;
             }
         }
         return doHttpRequest(null, queryUrl, "GET", token, null, null, true, sign, null, null);
@@ -182,7 +185,7 @@ public class HttpToolImpl implements IHttpTool {
         if (isSign) {
             try {
                 URIBuilder uriBuilder = new URIBuilder(url.originalUrl);
-                uriBuilder.addParameter("app_id", configService.getConfig().get(Constants.APP_ID, String.class));
+                uriBuilder.addParameter("app_id", "100030000");
                 uriBuilder.addParameter("timestamp", String.valueOf(System.currentTimeMillis() / 1000));
 
                 List<NameValuePair> p = new ArrayList<>();

@@ -10,8 +10,6 @@ public class Constants {
 
     public static final String DEFAULT_ENCODING = "UTF-8";
 
-    public static final String CONFIG_ENV = "env";
-
     public static final String TSP_URL = "tspUrl";
 
     // Http client
@@ -21,11 +19,9 @@ public class Constants {
     public static final String CONFIG_SOCKET_TIMEOUT = "socketTimeout"; // 读取数据的超时
     public static final String CONFIG_CONNECTION_REQUEST_TIMEOUT = "connectionRequestTimeout"; // 从连接池中获取连接的超时
 
-    public static final String APP_ID = "appId";
-
     public static final String APP_SECRET = "appSecret";
 
-    public static final String IMAGE_STOR_PATH = "imageStorPath";
-    public static final String IMAGE_DELETE_PATH = "imageDelePath";
+    public static final String CONFIG_IMAGE_STOR_PATH = "imageStorPath";
+    public static final String CONFIG_IMAGE_DELETE_PATH = "imageDelePath";
 
 }
