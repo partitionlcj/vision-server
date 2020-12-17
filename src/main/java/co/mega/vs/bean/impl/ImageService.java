@@ -83,6 +83,7 @@ public class ImageService implements IImageService {
                         Path targetPath = Paths.get(imageDelePath + tmpImageStatus.getFileName());
                         try {
                             Files.move(sourcePath, targetPath);
+                            logger.info("move image {} to  {}", tmpImageStatus.getFileName(), imageDeleteFile);
                         } catch (IOException e) {
                             logger.error("Exception happen in post process thread.", e);
                         }
@@ -104,7 +105,9 @@ public class ImageService implements IImageService {
         int hour = cal.get(Calendar.HOUR_OF_DAY); //美东？
         if (0 < hour && hour < 6) {
             try {
+                logger.info("start to clean image in {}", imageDelePath);
                 FileUtils.cleanDirectory(imageDeleteFile);
+                logger.info("clean image in {} finished", imageDelePath);
             } catch (IOException e) {
                 logger.error("Exception happen in post process thread.", e);
             }
