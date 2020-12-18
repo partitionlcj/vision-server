@@ -3,10 +3,11 @@ package co.mega.vs.bean.impl;
 import co.mega.vs.bean.IHttpTool;
 import co.mega.vs.bean.IImageService;
 import co.mega.vs.config.IConfigService;
-import co.mega.vs.entity.ImageStatus;
+import co.mega.vs.entity.ImageInfo;
 import co.mega.vs.entity.ImageStrategyResponse;
 import co.mega.vs.utils.Constants;
 import co.mega.vs.utils.UrlUtils;
+import co.mega.vs.utils.WriteImageTask;
 import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +15,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -23,10 +25,11 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
 
 @Service("imageService")
 public class ImageService implements IImageService {
@@ -37,6 +40,9 @@ public class ImageService implements IImageService {
     private IHttpTool httpTool;
 
     @Autowired
+    private ExecutorService customExecutorService;
+
+    @Autowired
     private UrlUtils urlUtils;
 
     @Autowired
@@ -44,86 +50,60 @@ public class ImageService implements IImageService {
 
     private Gson gson = new Gson();
 
-    private LinkedBlockingQueue<ImageStatus> imgStatusQueue = new LinkedBlockingQueue<>();
-
     private String imageDelePath;
 
     private String imageStorPath;
 
-    private Calendar cal = Calendar.getInstance();
+    private static LinkedBlockingQueue<ImageInfo> imgStorQueue = new LinkedBlockingQueue<>();
+
+    private static LinkedBlockingQueue<String> imageDownloadQueue = new LinkedBlockingQueue<>();
 
     @PostConstruct
     public void init() {
+
         imageDelePath = configService.getConfig().get(Constants.CONFIG_IMAGE_DELETE_PATH, String.class);
         imageStorPath = configService.getConfig().get(Constants.CONFIG_IMAGE_STOR_PATH, String.class);
 
-        //init imageStatusQueue
-        File imageDeleteFile = new File(imageDelePath);
-        File imageDirFile = new File(imageStorPath);
-        Arrays.asList(imageDirFile.listFiles()).forEach(vidFile -> {
-            Arrays.asList(vidFile.listFiles()).forEach(imageFile -> imgStatusQueue.offer(new ImageStatus(imageFile.getName(), new AtomicInteger(0))));
-        });
-
         new Thread( () -> {
             while (true) {
-                if (imgStatusQueue.isEmpty()) {
-                    cleanDeleFile(imageDeleteFile);
+                try {
+                    ImageInfo imageInfo = imgStorQueue.poll(3, TimeUnit.SECONDS);
+                    if (imageInfo != null) {
+                        customExecutorService.execute(new WriteImageTask(imageStorPath, imageInfo, imageDownloadQueue));
+                    }
+                } catch (InterruptedException e) {
+                    logger.info("Exception happen when write image to disk {}", e);
                     try {
                         Thread.sleep(30 * 1000);
-                    } catch (InterruptedException e) {
-                        logger.error("Exception happen in post process thread.", e);
-                    }
-                } else {
-                    cleanDeleFile(imageDeleteFile);
-                    ImageStatus tmpImageStatus = imgStatusQueue.peek();
-                    while (tmpImageStatus != null && tmpImageStatus.getStatus().intValue() == 1) {
-                        Path sourcePath = Paths.get(imageStorPath + tmpImageStatus.getFileName().split("_")[0] + File.separator + tmpImageStatus.getFileName());
-                        Path targetPath = Paths.get(imageDelePath + tmpImageStatus.getFileName());
-                        try {
-                            Files.move(sourcePath, targetPath);
-                            logger.info("move image {} to  {}", tmpImageStatus.getFileName(), imageDeleteFile);
-                        } catch (IOException e) {
-                            logger.error("Exception happen in post process thread.", e);
-                        }
-                        imgStatusQueue.poll();
-                        tmpImageStatus = imgStatusQueue.peek();
-                    }
-
-                    try {
-                        Thread.sleep(30 * 1000);
-                    } catch (InterruptedException e) {
-                        logger.error("Exception happen in post process thread.", e);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
                     }
                 }
             }
-        }).start();
+        }, "witeImageDisk").start();
+
     }
 
-    private void cleanDeleFile(File imageDeleteFile) {
-        int hour = cal.get(Calendar.HOUR_OF_DAY); //美东？
-        if (0 < hour && hour < 6) {
-            try {
-                logger.info("start to clean image in {}", imageDelePath);
-                FileUtils.cleanDirectory(imageDeleteFile);
-                logger.info("clean image in {} finished", imageDelePath);
-            } catch (IOException e) {
-                logger.error("Exception happen in post process thread.", e);
-            }
+    @Scheduled(cron="0 0 1,5 * * * ")
+    private void cleanDeleFile() {
+        try {
+            logger.info("start to clean image in {}", imageDelePath);
+            long start = System.currentTimeMillis();
+            FileUtils.cleanDirectory(new File(imageDelePath));
+            long end = System.currentTimeMillis();
+            logger.info("clean image in {} finished", imageDelePath);
+            logger.warn("clean {} directory cost time : {} ", imageDelePath, end - start);
+        } catch (IOException e) {
+            logger.error("Exception happen in post process thread.", e);
         }
     }
 
     @Override
-    public Map<String, Object> uploadImage(String vehicleId, String timeStamp, byte[] imageData) throws IOException {
+    public Map<String, Object> uploadImage(String vehicleId, String timeStamp, byte[] imageData) {
 
         logger.info("Image uploaded with size {}", imageData.length);
 
-        try {
-            FileUtils.writeByteArrayToFile(new File(imageStorPath + vehicleId + File.separator + vehicleId + "_" + timeStamp), imageData);
-            ImageStatus imageStatus = new ImageStatus(vehicleId + "_" + timeStamp, new AtomicInteger(0));
-            imgStatusQueue.offer(imageStatus);
-        } catch (IOException e) {
-            throw e;
-        }
+        imgStorQueue.offer(new ImageInfo(vehicleId, timeStamp, imageData));
 
         Map<String, Object> r = new HashMap<>();
         r.put("fileSize", imageData.length);
@@ -132,31 +112,33 @@ public class ImageService implements IImageService {
     }
 
     @Override
-    public Map<String, Object> downloadImage() throws IOException {
+    public Map<String, Object> downloadImage() {
 
         Map<String, Object> r = new HashMap<>();
 
-        Iterator<ImageStatus> iterator = imgStatusQueue.iterator();
-        while (iterator.hasNext()) {
-            ImageStatus imageStatus = iterator.next();
-            if (imageStatus.getStatus().get() == 0 && imageStatus.getLock().tryLock()) {
-                if (imageStatus.getStatus().get() == 0) {
-                    if (StringUtils.isNotBlank(imageStatus.getFileName())) {
-                        String vidDir = imageStatus.getFileName().split("_")[0];
-                        File file = new File(imageStorPath + vidDir + File.separator + imageStatus.getFileName());
-                        byte[] bytes = FileUtils.readFileToByteArray(file);
-                        r.put("bytes", bytes);
-                        r.put("fileName", file.getName());
-                    }
-                    imageStatus.setStatus(new AtomicInteger(1));
-                    imageStatus.getLock().unlock();
-                    return r;
-                }
-                imageStatus.getLock().unlock();
-            }
-        }
+        try {
+            String imageName = imageDownloadQueue.poll(1, TimeUnit.SECONDS);
+            if (imageName != null) {
+                File file = new File(imageStorPath + imageName.split("_")[0] + File.separator + imageName);
+                byte[] bytes = FileUtils.readFileToByteArray(file);
 
-        return r;
+                Path sourcePath = Paths.get(imageStorPath + imageName.split("_")[0] + File.separator + imageName);
+                Path targetPath = Paths.get(imageDelePath + imageName);
+                try {
+                    Files.move(sourcePath, targetPath);
+                    logger.info("move image {} to  {}", imageName, imageDelePath);
+                } catch (IOException e) {
+                    logger.error("Exception happen when move image {}.", e);
+                }
+
+                r.put("bytes", bytes);
+                r.put("fileName", file.getName());
+            }
+        } catch (Exception e) {
+            logger.error("Exception happen when download image", e);
+        } finally {
+            return r;
+        }
     }
 
     @Override
