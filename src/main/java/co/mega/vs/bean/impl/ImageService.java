@@ -56,7 +56,7 @@ public class ImageService implements IImageService {
 
     private static LinkedBlockingQueue<ImageInfo> imgStorQueue = new LinkedBlockingQueue<>();
 
-    private static LinkedBlockingQueue<String> imageDownloadQueue = new LinkedBlockingQueue<>();
+    private static LinkedBlockingQueue<String> imgDownloadQueue = new LinkedBlockingQueue<>();
 
     @PostConstruct
     public void init() {
@@ -69,7 +69,7 @@ public class ImageService implements IImageService {
                 try {
                     ImageInfo imageInfo = imgStorQueue.poll(3, TimeUnit.SECONDS);
                     if (imageInfo != null) {
-                        customExecutorService.execute(new WriteImageTask(imageStorPath, imageInfo, imageDownloadQueue));
+                        customExecutorService.execute(new WriteImageTask(imageStorPath, imageInfo, imgDownloadQueue));
                     }
                 } catch (InterruptedException e) {
                     logger.info("Exception happen when write image to disk {}", e);
@@ -117,7 +117,7 @@ public class ImageService implements IImageService {
         Map<String, Object> r = new HashMap<>();
 
         try {
-            String imageName = imageDownloadQueue.poll(1, TimeUnit.SECONDS);
+            String imageName = imgDownloadQueue.poll(1, TimeUnit.SECONDS);
             if (imageName != null) {
                 File file = new File(imageStorPath + imageName.split("_")[0] + File.separator + imageName);
                 byte[] bytes = FileUtils.readFileToByteArray(file);
