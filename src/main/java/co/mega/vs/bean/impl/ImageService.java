@@ -80,7 +80,7 @@ public class ImageService implements IImageService {
             long end = System.currentTimeMillis();
             logger.info("clean image in {} finished", imageDelePath);
             logger.warn("clean {} directory cost time : {} ", imageDelePath, end - start);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Exception happen when clean delete file.", e);
         }
     }
@@ -97,7 +97,7 @@ public class ImageService implements IImageService {
                 imgDownloadQueue.offer(vehicleId + "_" + timeStamp);
                 long end = System.currentTimeMillis();
                 logger.warn("write image {} cost time : {} ", vehicleId + "_" + timeStamp, end - start);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.error("Exception happen when write image to disk.", e);
             }
         });
@@ -133,9 +133,9 @@ public class ImageService implements IImageService {
             }
         } catch (Exception e) {
             logger.error("Exception happen when download image", e);
-        } finally {
-            return r;
         }
+
+        return r;
     }
 
     @Override
