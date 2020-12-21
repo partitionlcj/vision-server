@@ -34,7 +34,7 @@ public class WriteImageTask implements Runnable {
             long end = System.currentTimeMillis();
             logger.warn("write image {} cost time : {} ", imageInfo.getVid() + "_" + imageInfo.getTimeStamp(), end - start);
         } catch (IOException e) {
-            logger.error("Exception happen in post process thread.", e);
+            logger.error("Exception happen when write image to disk.", e);
         }
     }
 }
