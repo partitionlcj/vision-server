@@ -3,11 +3,9 @@ package co.mega.vs.bean.impl;
 import co.mega.vs.bean.IHttpTool;
 import co.mega.vs.bean.IImageService;
 import co.mega.vs.config.IConfigService;
-import co.mega.vs.entity.ImageInfo;
 import co.mega.vs.entity.ImageStrategyResponse;
 import co.mega.vs.utils.Constants;
 import co.mega.vs.utils.UrlUtils;
-import co.mega.vs.utils.WriteImageTask;
 import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +13,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -25,12 +24,15 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
+@EnableScheduling
 @Service("imageService")
 public class ImageService implements IImageService {
 
@@ -38,9 +40,6 @@ public class ImageService implements IImageService {
 
     @Autowired
     private IHttpTool httpTool;
-
-    @Autowired
-    private ExecutorService customExecutorService;
 
     @Autowired
     private UrlUtils urlUtils;
@@ -54,9 +53,9 @@ public class ImageService implements IImageService {
 
     private String imageStorPath;
 
-    private static LinkedBlockingQueue<ImageInfo> imgStorQueue = new LinkedBlockingQueue<>();
+    private static BlockingQueue<String> imgDownloadQueue = new LinkedBlockingQueue<>();
 
-    private static LinkedBlockingQueue<String> imgDownloadQueue = new LinkedBlockingQueue<>();
+    private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     @PostConstruct
     public void init() {
@@ -64,27 +63,15 @@ public class ImageService implements IImageService {
         imageDelePath = configService.getConfig().get(Constants.CONFIG_IMAGE_DELETE_PATH, String.class);
         imageStorPath = configService.getConfig().get(Constants.CONFIG_IMAGE_STOR_PATH, String.class);
 
-        new Thread( () -> {
-            while (true) {
-                try {
-                    ImageInfo imageInfo = imgStorQueue.poll(3, TimeUnit.SECONDS);
-                    if (imageInfo != null) {
-                        customExecutorService.execute(new WriteImageTask(imageStorPath, imageInfo, imgDownloadQueue));
-                    }
-                } catch (InterruptedException e) {
-                    logger.info("Exception happen when write image to disk {}", e);
-                    try {
-                        Thread.sleep(30 * 1000);
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-            }
-        }, "witeImageDisk").start();
+        //init downloadQueue
+        File imageStorFile = new File(imageStorPath);
+        Arrays.asList(imageStorFile.listFiles()).forEach(vidFile -> {
+            Arrays.asList(vidFile.listFiles()).forEach(imageFile -> imgDownloadQueue.offer(imageFile.getName()));
+        });
 
     }
 
-    @Scheduled(cron="0 0 1,5 * * * ")
+    @Scheduled(cron="0 0 1,5 * * ?")
     private void cleanDeleFile() {
         try {
             logger.info("start to clean image in {}", imageDelePath);
@@ -103,7 +90,17 @@ public class ImageService implements IImageService {
 
         logger.info("Image uploaded with size {}", imageData.length);
 
-        imgStorQueue.offer(new ImageInfo(vehicleId, timeStamp, imageData));
+        executorService.execute( () -> {
+            try {
+                long start = System.currentTimeMillis();
+                FileUtils.writeByteArrayToFile(new File(imageStorPath + vehicleId + File.separator + vehicleId + "_" + timeStamp), imageData);
+                imgDownloadQueue.offer(vehicleId + "_" + timeStamp);
+                long end = System.currentTimeMillis();
+                logger.warn("write image {} cost time : {} ", vehicleId + "_" + timeStamp, end - start);
+            } catch (IOException e) {
+                logger.error("Exception happen when write image to disk.", e);
+            }
+        });
 
         Map<String, Object> r = new HashMap<>();
         r.put("fileSize", imageData.length);
@@ -117,7 +114,7 @@ public class ImageService implements IImageService {
         Map<String, Object> r = new HashMap<>();
 
         try {
-            String imageName = imgDownloadQueue.poll(1, TimeUnit.SECONDS);
+            String imageName = imgDownloadQueue.poll();
             if (imageName != null) {
                 File file = new File(imageStorPath + imageName.split("_")[0] + File.separator + imageName);
                 byte[] bytes = FileUtils.readFileToByteArray(file);
