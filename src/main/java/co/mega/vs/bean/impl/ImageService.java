@@ -94,7 +94,7 @@ public class ImageService implements IImageService {
             logger.info("clean image in {} finished", imageDelePath);
             logger.warn("clean {} directory cost time : {} ", imageDelePath, end - start);
         } catch (IOException e) {
-            logger.error("Exception happen in post process thread.", e);
+            logger.error("Exception happen when clean delete file.", e);
         }
     }
 
