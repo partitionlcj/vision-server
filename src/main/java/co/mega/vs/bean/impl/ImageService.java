@@ -74,9 +74,12 @@ public class ImageService implements IImageService {
     @Scheduled(cron="0 0 1,5 * * ?")
     private void cleanDeleFile() {
         try {
+            File imgDeleFile = new File(imageDelePath);
+            long size = FileUtils.sizeOfDirectory(imgDeleFile) / 1024 / 1024;
+            logger.warn("the size of the file to be deleted is {} MB and the number of image to be deleted is {}",  size, imgDeleFile.listFiles().length);
             logger.info("start to clean image in {}", imageDelePath);
             long start = System.currentTimeMillis();
-            FileUtils.cleanDirectory(new File(imageDelePath));
+            FileUtils.cleanDirectory(imgDeleFile);
             long end = System.currentTimeMillis();
             logger.info("clean image in {} finished", imageDelePath);
             logger.warn("clean {} directory cost time : {} ", imageDelePath, end - start);
@@ -168,9 +171,9 @@ public class ImageService implements IImageService {
             }
         } catch (Exception e) {
             logger.error("Exception happens when get image strategy : ", e);
-        } finally {
-            return result;
         }
+
+        return result;
     }
 
     private void getImageStrategy(String rtJson, Map<String, Object> result) {
