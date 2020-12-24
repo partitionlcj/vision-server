@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -71,11 +72,11 @@ public class ImageService implements IImageService {
 
     }
 
-//    @Scheduled(cron="0 0 1,5 * * ?")
+    @Scheduled(cron="0 0 1,5 * * ?")
     private void cleanDeleFile() {
         try {
             File imgDeleFile = new File(imageDelePath);
-            long size = FileUtils.sizeOfDirectory(imgDeleFile)/1024/1024;
+            long size = FileUtils.sizeOfDirectory(imgDeleFile) / 1024 / 1024;
             logger.warn("the size of the file to be deleted is {} MB and the number of image to be deleted is {}",  size, imgDeleFile.listFiles().length);
             logger.info("start to clean image in {}", imageDelePath);
             long start = System.currentTimeMillis();
