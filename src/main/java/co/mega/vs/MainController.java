@@ -164,5 +164,43 @@ public class MainController {
 
     }
 
+    //for test
+    @GetMapping(value = {"/vs/img/test/status"})
+    public ResponseEntity fileStatus(HttpServletRequest request, @RequestParam(value = "req_id", required = false) String requestId, @RequestParam(value = "md5", required = false) String md5) {
+        if (StringUtils.isBlank(requestId)) {
+            requestId = UUID.randomUUID().toString();
+        }
 
+        MDC.put("reqId", requestId);
+
+        logger.info("-------------------------------------------------------------------------------");
+        logger.info("Request for get file status for test");
+
+        Map<String, Object> result;
+        try {
+            if (StringUtils.isBlank(md5)) {
+                throw new InvalidParameterException("md5 should not be blank!");
+            }
+
+            logger.info("requestId is {}, md5 is {}", requestId, md5);
+
+            Map<String, Object> data = imageService.getFileStatus(md5);
+            result = generateResult(requestId, "success", null);
+            result.put("data", data);
+        } catch (InvalidParameterException e) {
+            logger.error("Invalid param: ", e);
+            result = generateResult(requestId, "invalid_param", e.getMessage());
+            return new ResponseEntity(result, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            logger.error("Exception happens in workflow: ", e);
+            result = generateResult(requestId, "internal_error", e.getMessage());
+            return new ResponseEntity(result, HttpStatus.INTERNAL_SERVER_ERROR);
+        } finally {
+            logger.info("-------------------------------------------------------------------------------");
+        }
+
+        MDC.remove("reqId");
+
+        return new ResponseEntity(result, HttpStatus.OK);
+    }
 }

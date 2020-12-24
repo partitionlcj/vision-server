@@ -8,4 +8,6 @@ public interface IImageService {
     Map<String, Object> downloadImage();
 
     Map<String, Object> imageStrategy(String vehicleId);
+
+    Map<String, Object> getFileStatus(String md5);
 }

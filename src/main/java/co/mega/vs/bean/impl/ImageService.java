@@ -14,23 +14,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 @EnableScheduling
 @Service("imageService")
@@ -71,11 +71,11 @@ public class ImageService implements IImageService {
 
     }
 
-    @Scheduled(cron="0 0 1,5 * * ?")
+//    @Scheduled(cron="0 0 1,5 * * ?")
     private void cleanDeleFile() {
         try {
             File imgDeleFile = new File(imageDelePath);
-            long size = FileUtils.sizeOfDirectory(imgDeleFile) / 1024 / 1024;
+            long size = FileUtils.sizeOfDirectory(imgDeleFile)/1024/1024;
             logger.warn("the size of the file to be deleted is {} MB and the number of image to be deleted is {}",  size, imgDeleFile.listFiles().length);
             logger.info("start to clean image in {}", imageDelePath);
             long start = System.currentTimeMillis();
@@ -202,5 +202,78 @@ public class ImageService implements IImageService {
         }
 
         return "";
+    }
+
+    @Override
+    public Map<String, Object> getFileStatus(String md5) {
+
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            Integer storNum = 0;
+            File imageStorFile = new File(imageStorPath);
+            File[] files = imageStorFile.listFiles();
+            for (File file : files) {
+                storNum += file.listFiles().length;
+            }
+            logger.info("the number of images in the storage path is {}", storNum);
+
+            Integer downloadNum = new File(imageDelePath).listFiles().length;
+            logger.info("the number of images in the delete path is {}", downloadNum);
+
+            List<String> abnormalImages = checkMd5(md5);
+            logger.info("the number of images with abnormal md5  is {}", abnormalImages.size());
+
+            result.put("storNum", storNum);
+            result.put("downloadNum", downloadNum);
+            result.put("abnormalImages", abnormalImages);
+
+
+        } catch (Exception e) {
+            logger.error("Exception happens when get files status for test : ", e);
+        }
+
+        return result;
+    }
+
+    private List<String> checkMd5(String md5) {
+
+        List<String> result = new ArrayList<>();
+
+        logger.info("to check image md5 in {}", imageStorPath);
+
+        //check stor image md5
+        File imageStorFile = new File(imageStorPath);
+        Arrays.asList(imageStorFile.listFiles()).forEach(vidFile -> {
+            Arrays.asList(vidFile.listFiles()).forEach(imageFile -> {
+                try (InputStream is = Files.newInputStream(Paths.get(imageStorPath + imageFile.getName().split("_")[0] + File.separator + imageFile.getName()))) {
+                    String imageMd5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
+                    if (!imageMd5.equals(md5)) {
+                        logger.error("image with abnormal md5 in {}, and the md5 value is {}", imageStorPath + imageFile.getName().split("_")[0] + File.separator + imageFile.getName(), imageMd5);
+                        result.add(imageFile.getName());
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        });
+
+        logger.info("to check image md5 in {}", imageDelePath);
+        //check download image md5
+        File imageDeleFile = new File(imageDelePath);
+        Arrays.asList(imageDeleFile.listFiles()).forEach(file -> {
+            try (InputStream is = Files.newInputStream( Paths.get(imageDelePath + File.separator + file.getName()))) {
+                String imageMd5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
+                if (!imageMd5.equals(md5)) {
+                    logger.error("image with abnormal md5 in {}, and the md5 value is {}", imageDelePath + File.separator + file.getName(), imageMd5);
+                    result.add(file.getName());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        });
+
+        return result;
     }
 }
