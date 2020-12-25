@@ -38,4 +38,4 @@ COPY target/vision-server-1.0-SNAPSHOT.jar ./
 EXPOSE 10099
 
 #ENTRYPOINT ["sleep", "60"]
-#ENTRYPOINT ["sh", "./bin/start.sh"]
+ENTRYPOINT ["sh", "./bin/start.sh"]
