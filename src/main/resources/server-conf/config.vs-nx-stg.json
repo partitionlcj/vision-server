@@ -1,6 +1,6 @@
 {
   "tspUrl":"https://xtsp-stg.i-tetris.com",
   "appSecret":"Ols8R0hhNre6PqejbsZnA1YYIc5IKLSl",
-  "imageStorPath": "",
-  "imageDelePath": ""
+  "imageStorPath": "/data/vision-server-image/storImage/",
+  "imageDelePath": "/data/vision-server-image/deleteImage/"
 }
