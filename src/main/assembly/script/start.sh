@@ -64,7 +64,7 @@ if [ "k8s" = "${2}" ]; then
     java -Xmx512m -XX:+UseTLAB -XX:+DisableExplicitGC $JVM_OPTS -cp $SHDIR:conf/:lib/* -Dspring.profiles.active=$ENV co.mega.vs.Application
 else
     LOGFILE="nohup.out"
-    nohup java -Xmx512m -XX:+UseTLAB -XX:+DisableExplicitGC $JVM_OPTS -cp $SHDIR:conf/lib/* -Dspring.profiles.active=$ENV  co.mega.vs.Application > $LOGFILE &
+    nohup java -Xmx512m -XX:+UseTLAB -XX:+DisableExplicitGC $JVM_OPTS -cp $SHDIR:conf/:lib/* -Dspring.profiles.active=$ENV  co.mega.vs.Application > $LOGFILE &
 fi
 
 
