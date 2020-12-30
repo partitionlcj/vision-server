@@ -51,7 +51,7 @@ JVM_OPTS="$JVM_OPTS -XX:+UseG1GC"
 JVM_OPTS="$JVM_OPTS -XX:MaxGCPauseMillis=100"
 JVM_OPTS="$JVM_OPTS -XX:G1RSetUpdatingPauseTimePercent=5"
 
-JVM_OPTS="$JVM_OPTS -XX:ErrorFile=/data/app/online-ds/logs/hs_error%p.log"
+JVM_OPTS="$JVM_OPTS -XX:ErrorFile=/data/app/vision-server/logs/hs_error%p.log"
 
 JVM_OPTS="$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError"
 JVM_OPTS="$JVM_OPTS -XX:HeapDumpPath=$SHDIR/mem.dump"
