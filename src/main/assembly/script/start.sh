@@ -59,6 +59,14 @@ JVM_OPTS="$JVM_OPTS -XX:-OmitStackTraceInFastThrow"
 
 JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.port=7601 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
 
+set -x
+if [ "k8s" = "${2}" ]; then
+    java -Xmx512m -XX:+UseTLAB -XX:+DisableExplicitGC $JVM_OPTS -cp -Dspring.profiles.active=$ENV co.mega.vs.Application
+else
+    LOGFILE="nohup.out"
+    nohup java -Xmx512m -XX:+UseTLAB -XX:+DisableExplicitGC $JVM_OPTS -cp  -Dspring.profiles.active=$ENV co.mega.vs.Application > $LOGFILE &
+fi
+
 
 # wirte pid to file
 if [ $? -eq 0 ] 
