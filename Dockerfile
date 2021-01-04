@@ -32,8 +32,9 @@ RUN yum -y install libgomp
 RUN mkdir -p $USER_DIR
 WORKDIR $USER_DIR
 
-COPY target/vision-server-1.0-SNAPSHOT.jar ./
-#RUN unzip vision-server-1.0-SNAPSHOT.jar
+RUN ls
+COPY target/vision-server-1.0-SNAPSHOT-assembly.zip ./
+RUN unzip vision-server-1.0-SNAPSHOT-assembly.zip
 
 EXPOSE 10099
 

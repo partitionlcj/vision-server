@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name="LOG_PATTERN">
+            [%d{yyyy-MM-dd}T%d{HH:mm:ss.SSS}+08:00] [%-5p] [%X{reqId}] %c{1}:%L %m%n%throwable
+        </Property>
+    </Properties>
+    <Appenders>
+        <File name="file" fileName="/tmp/logs/service.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </File>
+
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}" />
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="file"/>
+        </Root>
+    </Loggers>
+</Configuration>

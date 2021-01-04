@@ -33,6 +33,20 @@ public class MainController {
     public void init() {
     }
 
+    //for test
+    @GetMapping(value = "/vs/status")
+    public ResponseEntity status() {
+        logger.info("Request for status");
+        try {
+            Map<String, Object> result = new HashMap<>();
+            result.put("result_code", "success");
+            return new ResponseEntity(result, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity(new Object(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
     @PostMapping(value = {"/vs/img/upload"})
     public ResponseEntity imageUpload(HttpServletRequest request, @RequestParam(value = "req_id", required = false) String requestId, @RequestParam(value = "vid", required = false) String vehicleId, @RequestParam(value = "image", required = false) MultipartFile image) {
         if (StringUtils.isBlank(requestId)) {
