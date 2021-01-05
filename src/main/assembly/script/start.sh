@@ -61,10 +61,10 @@ JVM_OPTS="$JVM_OPTS -Dcom.sun.management.jmxremote.port=7601 -Dcom.sun.managemen
 
 set -x
 if [ "k8s" = "${2}" ]; then
-    java -Xmx2G -XX:+UseTLAB -XX:+DisableExplicitGC $JVM_OPTS -cp $SHDIR:conf/:lib/* -Dspring.profiles.active=$ENV co.mega.vs.Application
+    java -Xmx1G -XX:+UseTLAB -XX:+DisableExplicitGC $JVM_OPTS -cp $SHDIR:conf/:lib/* -Dspring.profiles.active=$ENV co.mega.vs.Application
 else
     LOGFILE="nohup.out"
-    nohup java -Xmx2G -XX:+UseTLAB -XX:+DisableExplicitGC $JVM_OPTS -cp $SHDIR:conf/:lib/* -Dspring.profiles.active=$ENV  co.mega.vs.Application > $LOGFILE &
+    nohup java -Xmx1G -XX:+UseTLAB -XX:+DisableExplicitGC $JVM_OPTS -cp $SHDIR:conf/:lib/* -Dspring.profiles.active=$ENV  co.mega.vs.Application > $LOGFILE &
 fi
 
 
