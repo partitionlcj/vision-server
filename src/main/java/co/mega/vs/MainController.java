@@ -160,7 +160,7 @@ public class MainController {
                 return new ResponseEntity(data.get("bytes"), httpHeaders, HttpStatus.OK);
             } else {
                 logger.error("not found image, please try again later");
-                return new ResponseEntity(HttpStatus.NOT_FOUND);
+                return new ResponseEntity(HttpStatus.NO_CONTENT);
             }
 
         } catch (InvalidParameterException e) {
