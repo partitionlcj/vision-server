@@ -16,4 +16,22 @@ public class SpringConfiguration {
         dataSource.addDataSourceProperty("characterEncoding", "utf8");
         return dataSource;
     }
+
+    @Bean
+    @ConfigurationProperties("app.datasource.test")
+    public HikariDataSource testDataSource() {
+        HikariDataSource dataSource = DataSourceBuilder.create().type(HikariDataSource.class).build();
+        dataSource.addDataSourceProperty("useUnicode", "true");
+        dataSource.addDataSourceProperty("characterEncoding", "utf8");
+        return dataSource;
+    }
+
+    @Bean
+    @ConfigurationProperties("app.datasource.stg")
+    public HikariDataSource stgDataSource() {
+        HikariDataSource dataSource = DataSourceBuilder.create().type(HikariDataSource.class).build();
+        dataSource.addDataSourceProperty("useUnicode", "true");
+        dataSource.addDataSourceProperty("characterEncoding", "utf8");
+        return dataSource;
+    }
 }
