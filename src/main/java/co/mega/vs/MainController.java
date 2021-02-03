@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.security.InvalidParameterException;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -176,6 +177,85 @@ public class MainController {
             logger.info("-------------------------------------------------------------------------------");
         }
 
+    }
+
+    @PostMapping(value = {"/vs/status/report"})
+    public ResponseEntity camStatusReport(HttpServletRequest request, @RequestParam(value = "req_id", required = true) String requestId,
+                                      @RequestParam(value = "vid", required = true) String vehicleId,
+                                       @RequestParam(value = "service", required = true) String service,
+                                       @RequestParam(value = "cam_name", required = true) String camera,
+                                       @RequestParam(value = "key_state", required = true) String keyState,
+                                       @RequestParam(value = "result_code", required = true) String resultCode,
+                                       @RequestParam(value = "timestamp", required = true) String timeStamp) {
+        MDC.put("reqId", requestId);
+
+        logger.info("-------------------------------------------------------------------------------");
+        logger.info("Request for camera status report, request id {}, vehicle id {}, service {}, camera {}, key state {}, result code {}, create time {}", requestId, vehicleId, service, camera, keyState, resultCode, timeStamp);
+
+        Map<String, Object> result;
+        try {
+            Long createTime = Timestamp.valueOf(timeStamp).getTime();
+            Map<String, Object> data = imageService.camStatusReport(requestId, vehicleId, service, camera, keyState, resultCode, createTime);
+            result = generateResult(requestId, "success", null);
+            result.put("data", data);
+        } catch (Exception e) {
+            logger.error("Exception happens in workflow: ", e);
+            result = generateResult(requestId, "internal_error", e.getMessage());
+            return new ResponseEntity(result, HttpStatus.INTERNAL_SERVER_ERROR);
+        } finally {
+            MDC.remove("reqId");
+            logger.info("-------------------------------------------------------------------------------");
+        }
+
+        return new ResponseEntity(result, HttpStatus.OK);
+    }
+
+    @PostMapping(value = {"/vs/log/upload"})
+    public ResponseEntity logUpload(HttpServletRequest request, @RequestParam(value = "req_id", required = true) String requestId,
+                                          @RequestParam(value = "vid", required = true) String vehicleId,
+                                          @RequestParam(value = "service", required = true) String service,
+                                          @RequestParam(value = "cam_name", required = true) String camera,
+                                          @RequestParam(value = "key_state", required = true) String keyState,
+                                          @RequestParam(value = "result_code", required = true) String resultCode,
+                                          @RequestParam(value = "image", required = true) MultipartFile image,
+                                          @RequestParam(value = "log_file", required = false) MultipartFile logFile,
+                                          @RequestParam(value = "timestamp", required = true) String timeStamp) {
+        MDC.put("reqId", requestId);
+
+        logger.info("-------------------------------------------------------------------------------");
+        logger.info("Request for log upload, request id {}, vehicle id {}, service {}, camera {}, key state {}, result code {}, create time {}", requestId, vehicleId, service, camera, keyState, resultCode, timeStamp);
+
+        Map<String, Object> result;
+        try {
+            if (image.getBytes() == null || image.getBytes().length == 0) {
+                throw new InvalidParameterException("image should not be blank!");
+            }
+
+            if (logFile == null || logFile.getBytes() == null || logFile.getBytes().length == 0) {
+                logger.info("Request for log upload and log file is null");
+            } else {
+                logger.info("Request for log upload with log file size is {}", logFile.getBytes().length);
+            }
+
+            Long createTime = Timestamp.valueOf(timeStamp).getTime();
+            Map<String, Object> data = imageService.uploadLog(requestId, vehicleId, service, camera, keyState, resultCode, createTime, image.getBytes(), logFile == null ? null : logFile.getBytes());
+            result = generateResult(requestId, "success", null);
+            result.put("data", data);
+        } catch (InvalidParameterException e) {
+            logger.error("Invalid param: ", e);
+            result = generateResult(requestId, "invalid_param", e.getMessage());
+            return new ResponseEntity(result, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            logger.error("Exception happens in workflow: ", e);
+            result = generateResult(requestId, "internal_error", e.getMessage());
+            return new ResponseEntity(result, HttpStatus.INTERNAL_SERVER_ERROR);
+        } finally {
+            MDC.remove("reqId");
+            logger.info("-------------------------------------------------------------------------------");
+        }
+
+
+        return new ResponseEntity(result, HttpStatus.OK);
     }
 
     //for test

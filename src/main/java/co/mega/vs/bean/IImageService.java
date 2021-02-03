@@ -10,4 +10,8 @@ public interface IImageService {
     Map<String, Object> imageStrategy(String vehicleId);
 
     Map<String, Object> getFileStatus(String md5);
+
+    Map<String, Object> camStatusReport(String requestId, String vehicleId, String service, String camera, String keyState, String resultCode, Long createTime);
+
+    Map<String, Object> uploadLog(String requestId, String vehicleId, String service, String camera, String keyState, String resultCode, Long createTime, byte[] bytes, byte[] bytes1);
 }
