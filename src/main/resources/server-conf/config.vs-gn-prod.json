@@ -1,0 +1,7 @@
+{
+  "tspUrl": "https://tsp.gn.i-tetris.com",
+  "appSecret": "KsTAIQj1bR1JAnU5IC8T99ff1bvHAnk5",
+  "imageStorPath": "/data/vision-server-image/storImage/",
+  "imageDelePath": "/data/vision-server-image/deleteImage/",
+  "env":"vs-gn-prod"
+}

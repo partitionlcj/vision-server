@@ -66,25 +66,25 @@ public class SpringConfiguration {
         return new JdbcTemplate(localDataSource());
     }
 
-    @Profile({"ds-mars-dev", "ds-mars-dev1", "ds-mars-qe", "ds-mars-int", "ds-mars-uee"})
+    @Profile({"vs-nx-test"})
     @Bean(name = "mainJdbcTemplate")
     public JdbcTemplate getTestJdbcTemplate() {
         return new JdbcTemplate(testDataSource());
     }
 
-    @Profile({"ds-mars-stg", "ds-mars-prod"})
+    @Profile({"vs-nx-stg", "vs-nx-prod"})
     @Bean(name = "mainJdbcTemplate")
     public JdbcTemplate getStgJdbcTemplate() {
         return new JdbcTemplate(stgDataSource());
     }
 
-    @Profile({"ds-gn-test"})
+    @Profile({"vs-gn-test"})
     @Bean(name = "mainJdbcTemplate")
     public JdbcTemplate getGnTestJdbcTemplate() {
         return new JdbcTemplate(gnTestDataSource());
     }
 
-    @Profile({"ds-gn-stg", "ds-gn-prod"})
+    @Profile({"vs-gn-stg", "vs-gn-prod"})
     @Bean(name = "mainJdbcTemplate")
     public JdbcTemplate getGnStgJdbcTemplate() {
         return new JdbcTemplate(gnStgDataSource());
