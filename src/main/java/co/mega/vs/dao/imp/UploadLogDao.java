@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service("uploadLogDao")
 public class UploadLogDao implements IUploadLogDao {
 
-    private static Logger logger = LoggerFactory.getLogger(CamStatusDao.class);
+    private static Logger logger = LoggerFactory.getLogger(UploadLogDao.class);
 
     private String insertSql = "INSERT INTO vs_log_info (" +
             "id, vehicle_id, service, cam_name, key_state, result_code, create_time)" +
