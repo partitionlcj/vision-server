@@ -3,5 +3,5 @@
   "appSecret":"eeTmvVIPLifhhcEyt3oqbiO7uYIzze2b",
   "imageStorPath": "/data/vision-server-image/storImage/",
   "imageDelePath": "/data/vision-server-image/deleteImage/",
-  "env":"vs-nx-test"
+  "env":"vs-gn-test"
 }
