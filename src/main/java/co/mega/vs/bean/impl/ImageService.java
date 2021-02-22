@@ -2,15 +2,14 @@ package co.mega.vs.bean.impl;
 
 import co.mega.vs.bean.IHttpTool;
 import co.mega.vs.bean.IImageService;
+import co.mega.vs.bean.IS3Uploader;
 import co.mega.vs.config.IConfigService;
 import co.mega.vs.dao.ICamStatusDao;
 import co.mega.vs.dao.IUploadLogDao;
 import co.mega.vs.entity.ImageStrategyResponse;
-import co.mega.vs.utils.AWSClientUtils;
+import co.mega.vs.entity.LogFileInfo;
 import co.mega.vs.utils.Constants;
-import co.mega.vs.utils.S3Uploader;
 import co.mega.vs.utils.UrlUtils;
-import com.amazonaws.services.s3.AmazonS3;
 import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -52,7 +51,7 @@ public class ImageService implements IImageService {
     private IConfigService configService;
 
     @Autowired
-    private AWSClientUtils awsClientUtils;
+    private IS3Uploader s3Uploader;
 
     @Autowired
     private ICamStatusDao camStatusDao;
@@ -270,25 +269,12 @@ public class ImageService implements IImageService {
     public Map<String, Object> uploadLog(String requestId, String vehicleId, String service, String camera, String keyState, String resultCode, Long createTime, byte[] image, byte[] logFile) {
         Map<String, Object> result = new HashMap<>();
 
-        //upload s3
-        String env = configService.getConfig().get(Constants.CONFIG_ENV, String.class);
-        executorService.execute( () -> {
-            try {
-                long start = System.currentTimeMillis();
-                AmazonS3 awsClient = awsClientUtils.getAWSClient();
-                if (image != null && image.length > 0) {
-                    S3Uploader.upload(image, vehicleId, requestId, env, true, awsClient);
-                }
-
-                if (logFile != null && logFile.length > 0) {
-                    S3Uploader.upload(logFile, vehicleId, requestId, env, false, awsClient);
-                }
-                long end = System.currentTimeMillis();
-                logger.warn("{} upload log to s3 cost time : {} ", requestId, end - start);
-            } catch (Exception e) {
-                logger.error("Exception happen when upload log to s3.", e);
-            }
-        });
+        if (image != null && image.length > 0) {
+            s3Uploader.add(new LogFileInfo(image, true, vehicleId, requestId));
+        }
+        if (logFile != null && logFile.length > 0) {
+            s3Uploader.add(new LogFileInfo(logFile, false, vehicleId, requestId));
+        }
 
         int status = uploadLogDao.insert(requestId, vehicleId, service, camera, keyState, resultCode, createTime);
         if (status == 1) {

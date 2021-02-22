@@ -25,6 +25,7 @@ public class CommonDefaultConfig implements IDefaultConfig {
                 put(Constants.CONFIG_CONNECT_TIMEOUT, 500);
                 put(Constants.CONFIG_CONNECTION_REQUEST_TIMEOUT, 500);
                 put(Constants.CONFIG_SOCKET_TIMEOUT, 1300);
+                put(Constants.CONFIG_LOD_FILE_QUEUE_SIZE, 10000);
             }
         };
     }

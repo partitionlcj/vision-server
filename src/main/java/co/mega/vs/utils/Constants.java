@@ -37,5 +37,6 @@ public class Constants {
     public static String AWS_BUCKET_NAME_PREFIX = "ais-storage";
     public static String GN_BUCKET_NAME_PREFIX = "ais-storage-gz";
 
+    public static final String CONFIG_LOD_FILE_QUEUE_SIZE = "logFileQueueSize";
 
 }
