@@ -6,9 +6,11 @@ import co.mega.vs.config.IConfigService;
 import co.mega.vs.dao.ICamStatusDao;
 import co.mega.vs.dao.IUploadLogDao;
 import co.mega.vs.entity.ImageStrategyResponse;
+import co.mega.vs.utils.AWSClientUtils;
 import co.mega.vs.utils.Constants;
 import co.mega.vs.utils.S3Uploader;
 import co.mega.vs.utils.UrlUtils;
+import com.amazonaws.services.s3.AmazonS3;
 import com.google.gson.Gson;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,6 +50,9 @@ public class ImageService implements IImageService {
 
     @Autowired
     private IConfigService configService;
+
+    @Autowired
+    private AWSClientUtils awsClientUtils;
 
     @Autowired
     private ICamStatusDao camStatusDao;
@@ -270,12 +275,13 @@ public class ImageService implements IImageService {
         executorService.execute( () -> {
             try {
                 long start = System.currentTimeMillis();
+                AmazonS3 awsClient = awsClientUtils.getAWSClient();
                 if (image != null && image.length > 0) {
-                    S3Uploader.upload(image, vehicleId, requestId, env, true);
+                    S3Uploader.upload(image, vehicleId, requestId, env, true, awsClient);
                 }
 
                 if (logFile != null && logFile.length > 0) {
-                    S3Uploader.upload(logFile, vehicleId, requestId, env, false);
+                    S3Uploader.upload(logFile, vehicleId, requestId, env, false, awsClient);
                 }
                 long end = System.currentTimeMillis();
                 logger.warn("{} upload log to s3 cost time : {} ", requestId, end - start);

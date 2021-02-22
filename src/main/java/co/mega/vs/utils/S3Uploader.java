@@ -35,7 +35,7 @@ public class S3Uploader {
 //        upload(file, dest);
     }
 
-    public static void upload(byte[] bytes, String vehicleId, String fileName, String env, boolean isImage)  {
+    public static void upload(byte[] bytes, String vehicleId, String fileName, String env, boolean isImage, AmazonS3 s3Client)  {
 
         List<S3Type> s3Types = new ArrayList<>();
         if (StringUtils.isNotBlank(env) && env.contains("gn")) {
@@ -45,7 +45,7 @@ public class S3Uploader {
         }
 
         for (S3Type s3Type : s3Types) {
-            AmazonS3 s3Client = S3Utils.getS3Client(s3Type);
+//            AmazonS3 s3Client = S3Utils.getS3Client(s3Type);
             try {
                 // 上传文件
                 String bucketName = S3Utils.getBucketByFileName(isImage, vehicleId, s3Type);
