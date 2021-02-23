@@ -12,6 +12,8 @@ public class Constants {
 
     public static final String TSP_URL = "tspUrl";
 
+    public static final String CONFIG_ENV = "env";
+
     // Http client
     public static final String CONFIG_MAX_TOTAL = "maxTotal";
     public static final String CONFIG_DEFAULT_MAX_PER_ROUTE = "defaultMaxPerRoute";
@@ -23,5 +25,18 @@ public class Constants {
 
     public static final String CONFIG_IMAGE_STOR_PATH = "imageStorPath";
     public static final String CONFIG_IMAGE_DELETE_PATH = "imageDelePath";
+
+    //s3
+    public static String AWS_S3_ACCESS_KEY = "AKIATIWY752LZ6OCX5DD";
+    public static String AWS_S3_SECRET_KEY = "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";
+
+    public static String HW_OBS_ACCESS_KEY = "EPYG0BBE0O37MORZ8WGE";
+    public static String HW_OBS_SECRET_KEY = "BFoQLLDiBELjZMndiRLj8ZprF4XoKDMBHqYZO70R";
+    public static String HW_OBS_ENDPOINT_URL = "http://obs.cn-south-1.myhuaweicloud.com";
+
+    public static String AWS_BUCKET_NAME_PREFIX = "ais-storage";
+    public static String GN_BUCKET_NAME_PREFIX = "ais-storage-gz";
+
+    public static final String CONFIG_LOD_FILE_QUEUE_SIZE = "logFileQueueSize";
 
 }

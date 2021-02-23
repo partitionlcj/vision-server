@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <property name="LOG_PREFIX"  value="${env:POD_NAME}"/>
+        <Property name="LOG_PATTERN">
+            [%d{yyyy-MM-dd}T%d{HH:mm:ss.SSS}+08:00] [%-5p] [%X{reqId}] %c{1}:%L %m%n%throwable
+        </Property>
+    </Properties>
+    <Appenders>
+        <RollingFile name="rollingFile" fileName="logs/${LOG_PREFIX}.log" filePattern="logs/${LOG_PREFIX}.log.%d{yyyy-MM-dd}">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+            </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="logs" maxDepth="1">
+                    <IfFileName glob="*.log.????-??-??*">
+                        <IfAny>
+                            <IfAccumulatedFileCount exceeds="30" />
+                        </IfAny>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="rollingFile"/>
+        </Root>
+    </Loggers>
+</Configuration>

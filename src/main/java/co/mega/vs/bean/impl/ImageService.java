@@ -2,8 +2,12 @@ package co.mega.vs.bean.impl;
 
 import co.mega.vs.bean.IHttpTool;
 import co.mega.vs.bean.IImageService;
+import co.mega.vs.bean.IS3Uploader;
 import co.mega.vs.config.IConfigService;
+import co.mega.vs.dao.ICamStatusDao;
+import co.mega.vs.dao.IUploadLogDao;
 import co.mega.vs.entity.ImageStrategyResponse;
+import co.mega.vs.entity.LogFileInfo;
 import co.mega.vs.utils.Constants;
 import co.mega.vs.utils.UrlUtils;
 import com.google.gson.Gson;
@@ -30,8 +34,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 @EnableScheduling
 @Service("imageService")
@@ -48,6 +50,15 @@ public class ImageService implements IImageService {
     @Autowired
     private IConfigService configService;
 
+    @Autowired
+    private IS3Uploader s3Uploader;
+
+    @Autowired
+    private ICamStatusDao camStatusDao;
+
+    @Autowired
+    private IUploadLogDao uploadLogDao;
+
     private Gson gson = new Gson();
 
     private String imageDelePath;
@@ -56,7 +67,7 @@ public class ImageService implements IImageService {
 
     private static BlockingQueue<String> imgDownloadQueue = new LinkedBlockingQueue<>();
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private ExecutorService executorService = Executors.newFixedThreadPool(20);
 
     @PostConstruct
     public void init() {
@@ -232,6 +243,46 @@ public class ImageService implements IImageService {
 
         } catch (Exception e) {
             logger.error("Exception happens when get files status for test : ", e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> camStatusReport(String requestId, String vehicleId, String service, String camera, String keyState, String resultCode, Long createTime) {
+        Map<String, Object> result = new HashMap<>();
+
+        int status = camStatusDao.insert(requestId, vehicleId, service, camera, keyState, resultCode, createTime);
+
+        if (status == 1) {
+            result.put("success", true);
+            logger.info("insert camera status success");
+        } else {
+            result.put("success", false);
+            logger.info("insert camera status failed with status code {}", status);
+        }
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> uploadLog(String requestId, String vehicleId, String service, String camera, String keyState, String resultCode, Long createTime, byte[] image, byte[] logFile) {
+        Map<String, Object> result = new HashMap<>();
+
+        if (image != null && image.length > 0) {
+            s3Uploader.add(new LogFileInfo(image, true, vehicleId, requestId));
+        }
+        if (logFile != null && logFile.length > 0) {
+            s3Uploader.add(new LogFileInfo(logFile, false, vehicleId, requestId));
+        }
+
+        int status = uploadLogDao.insert(requestId, vehicleId, service, camera, keyState, resultCode, createTime);
+        if (status == 1) {
+            result.put("success", true);
+            logger.info("insert log info success");
+        } else {
+            result.put("success", false);
+            logger.info("insert log info failed with status code {}", status);
         }
 
         return result;
