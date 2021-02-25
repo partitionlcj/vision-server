@@ -2,6 +2,7 @@ package co.mega.vs.bean.impl;
 
 import co.mega.vs.bean.IHttpTool;
 import co.mega.vs.bean.IImageService;
+import co.mega.vs.bean.IMicrometerService;
 import co.mega.vs.bean.IS3Uploader;
 import co.mega.vs.config.IConfigService;
 import co.mega.vs.dao.ICamStatusDao;
@@ -59,6 +60,9 @@ public class ImageService implements IImageService {
     @Autowired
     private IUploadLogDao uploadLogDao;
 
+    @Autowired
+    private IMicrometerService micrometerService;
+
     private Gson gson = new Gson();
 
     private String imageDelePath;
@@ -104,6 +108,8 @@ public class ImageService implements IImageService {
     public Map<String, Object> uploadImage(String vehicleId, String timeStamp, byte[] imageData) {
 
         logger.info("Image uploaded with size {}", imageData.length);
+
+        micrometerService.counter(Constants.UPLOAD_IMAGE_COUNT).increment();
 
         executorService.execute( () -> {
             try {
