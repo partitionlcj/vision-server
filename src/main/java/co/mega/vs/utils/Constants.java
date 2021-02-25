@@ -41,5 +41,6 @@ public class Constants {
 
     //uploadImage
     public static final String UPLOAD_IMAGE_COUNT = "upload_image_count";
+    public static final String UPLOAD_IMAGE_TIME = "upload_image_time";
 
 }

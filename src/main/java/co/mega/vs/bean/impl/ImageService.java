@@ -12,6 +12,7 @@ import co.mega.vs.entity.LogFileInfo;
 import co.mega.vs.utils.Constants;
 import co.mega.vs.utils.UrlUtils;
 import com.google.gson.Gson;
+import io.micrometer.core.instrument.Timer;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -107,6 +108,7 @@ public class ImageService implements IImageService {
     @Override
     public Map<String, Object> uploadImage(String vehicleId, String timeStamp, byte[] imageData) {
 
+        io.micrometer.core.instrument.Timer.Sample sample = Timer.start();
         logger.info("Image uploaded with size {}", imageData.length);
 
         micrometerService.counter(Constants.UPLOAD_IMAGE_COUNT).increment();
@@ -123,6 +125,7 @@ public class ImageService implements IImageService {
             }
         });
 
+        sample.stop(micrometerService.time(Constants.UPLOAD_IMAGE_TIME));
         Map<String, Object> r = new HashMap<>();
         r.put("fileSize", imageData.length);
         r.put("success", true);
