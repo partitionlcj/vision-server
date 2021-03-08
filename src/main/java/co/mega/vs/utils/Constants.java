@@ -49,6 +49,7 @@ public class Constants {
     public static final String UPLOAD_LOG_COUNT = "upload_log_count";
     public static final String UPLOAD_LOG_TIME = "upload_log_time";
 
-
+    public static final String STATUS_REPORT_COUNT = "status_report_count";
+    public static final String STATUS_REPORT_TIME = "status_report_time";
 
 }

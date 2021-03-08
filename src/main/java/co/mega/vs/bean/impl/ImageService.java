@@ -273,6 +273,8 @@ public class ImageService implements IImageService {
 
     @Override
     public Map<String, Object> camStatusReport(String requestId, String vehicleId, String service, String camera, String keyState, String resultCode, Long createTime) {
+        io.micrometer.core.instrument.Timer.Sample sample = Timer.start();
+        micrometerService.counter(Constants.STATUS_REPORT_COUNT).increment();
         Map<String, Object> result = new HashMap<>();
 
         int status = camStatusDao.insert(requestId, vehicleId, service, camera, keyState, resultCode, createTime);
@@ -285,6 +287,7 @@ public class ImageService implements IImageService {
             logger.info("insert camera status failed with status code {}", status);
         }
 
+        sample.stop(micrometerService.time(Constants.STATUS_REPORT_TIME));
         return result;
     }
 
