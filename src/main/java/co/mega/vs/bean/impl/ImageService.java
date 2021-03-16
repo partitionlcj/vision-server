@@ -2,6 +2,7 @@ package co.mega.vs.bean.impl;
 
 import co.mega.vs.bean.IHttpTool;
 import co.mega.vs.bean.IImageService;
+import co.mega.vs.bean.IMicrometerService;
 import co.mega.vs.bean.IS3Uploader;
 import co.mega.vs.config.IConfigService;
 import co.mega.vs.dao.ICamStatusDao;
@@ -11,6 +12,8 @@ import co.mega.vs.entity.LogFileInfo;
 import co.mega.vs.utils.Constants;
 import co.mega.vs.utils.UrlUtils;
 import com.google.gson.Gson;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -59,6 +62,12 @@ public class ImageService implements IImageService {
     @Autowired
     private IUploadLogDao uploadLogDao;
 
+    @Autowired
+    private IMicrometerService micrometerService;
+
+    @Autowired
+    private MeterRegistry meterRegistry;
+
     private Gson gson = new Gson();
 
     private String imageDelePath;
@@ -81,6 +90,14 @@ public class ImageService implements IImageService {
             Arrays.asList(vidFile.listFiles()).forEach(imageFile -> imgDownloadQueue.offer(imageFile.getName()));
         });
 
+        new Thread( () -> {
+            try {
+                meterRegistry.gauge(Constants.IMG_DOWNLOAD_QUEUE_SIZE, imgDownloadQueue.size());
+                Thread.sleep(100);
+            } catch (Exception e) {
+                //do nothing
+            }
+        }).start();
     }
 
     @Scheduled(cron="0 0 1,5 * * ?")
@@ -103,7 +120,10 @@ public class ImageService implements IImageService {
     @Override
     public Map<String, Object> uploadImage(String vehicleId, String timeStamp, byte[] imageData) {
 
+        io.micrometer.core.instrument.Timer.Sample sample = Timer.start();
         logger.info("Image uploaded with size {}", imageData.length);
+
+        micrometerService.counter(Constants.UPLOAD_IMAGE_COUNT).increment();
 
         executorService.execute( () -> {
             try {
@@ -117,6 +137,7 @@ public class ImageService implements IImageService {
             }
         });
 
+        sample.stop(micrometerService.time(Constants.UPLOAD_IMAGE_TIME));
         Map<String, Object> r = new HashMap<>();
         r.put("fileSize", imageData.length);
         r.put("success", true);
@@ -126,8 +147,9 @@ public class ImageService implements IImageService {
     @Override
     public Map<String, Object> downloadImage() {
 
+        io.micrometer.core.instrument.Timer.Sample sample = Timer.start();
         Map<String, Object> r = new HashMap<>();
-
+        micrometerService.counter(Constants.DOWNLOAD_IMAGE_COUNT).increment();
         try {
             String imageName = imgDownloadQueue.poll();
             if (imageName != null) {
@@ -150,6 +172,7 @@ public class ImageService implements IImageService {
             logger.error("Exception happen when download image", e);
         }
 
+        sample.stop(micrometerService.time(Constants.DOWNLOAD_IMAGE_TIME));
         return r;
     }
 
@@ -250,6 +273,8 @@ public class ImageService implements IImageService {
 
     @Override
     public Map<String, Object> camStatusReport(String requestId, String vehicleId, String service, String camera, String keyState, String resultCode, Long createTime) {
+        io.micrometer.core.instrument.Timer.Sample sample = Timer.start();
+        micrometerService.counter(Constants.STATUS_REPORT_COUNT).increment();
         Map<String, Object> result = new HashMap<>();
 
         int status = camStatusDao.insert(requestId, vehicleId, service, camera, keyState, resultCode, createTime);
@@ -262,11 +287,14 @@ public class ImageService implements IImageService {
             logger.info("insert camera status failed with status code {}", status);
         }
 
+        sample.stop(micrometerService.time(Constants.STATUS_REPORT_TIME));
         return result;
     }
 
     @Override
     public Map<String, Object> uploadLog(String requestId, String vehicleId, String service, String camera, String keyState, String resultCode, Long createTime, byte[] image, byte[] logFile) {
+        io.micrometer.core.instrument.Timer.Sample sample = Timer.start();
+        micrometerService.counter(Constants.UPLOAD_LOG_COUNT).increment();
         Map<String, Object> result = new HashMap<>();
 
         if (image != null && image.length > 0) {
@@ -285,6 +313,7 @@ public class ImageService implements IImageService {
             logger.info("insert log info failed with status code {}", status);
         }
 
+        sample.stop(micrometerService.time(Constants.UPLOAD_LOG_TIME));
         return result;
     }
 

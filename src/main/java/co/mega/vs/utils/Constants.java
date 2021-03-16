@@ -39,4 +39,17 @@ public class Constants {
 
     public static final String CONFIG_LOD_FILE_QUEUE_SIZE = "logFileQueueSize";
 
+    //uploadImage
+    public static final String UPLOAD_IMAGE_COUNT = "upload_image_count";
+    public static final String UPLOAD_IMAGE_TIME = "upload_image_time";
+    public static final String DOWNLOAD_IMAGE_COUNT = "download_image_count";
+    public static final String DOWNLOAD_IMAGE_TIME = "download_image_time";
+    public static final String IMG_DOWNLOAD_QUEUE_SIZE = "image_download_queue_size";
+
+    public static final String UPLOAD_LOG_COUNT = "upload_log_count";
+    public static final String UPLOAD_LOG_TIME = "upload_log_time";
+
+    public static final String STATUS_REPORT_COUNT = "status_report_count";
+    public static final String STATUS_REPORT_TIME = "status_report_time";
+
 }
